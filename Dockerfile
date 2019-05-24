@@ -1,16 +1,15 @@
-FROM node:alpine as builder
+# Step 1: Build the app in image 'builder'
+FROM node:10.4-alpine AS builder
 
-WORKDIR /src
-COPY package.json package-lock.json  /app/
-RUN npm install @angular/cli@6.0.8 -g
-RUN cd /app && npm install
-COPY .  /app
+WORKDIR /usr/src/app
+COPY . .
+RUN npm ci && npm run build
 
-RUN cd /app && npm run build
+# Step 2: Use build output from 'builder'
+FROM nginx:stable-alpine
+LABEL version="1.0"
 
-FROM nginx:alpine
-RUN rm -rf /usr/share/nginx/html/*
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=builder /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+WORKDIR /usr/share/nginx/html
+COPY --from=builder /usr/src/app/dist/my-angular-app/ .
