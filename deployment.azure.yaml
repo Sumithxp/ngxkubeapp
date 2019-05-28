@@ -1,33 +1,94 @@
-apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2 
-kind: Deployment 
-metadata: 
-  name: angular-deployment 
-spec: 
-  selector: 
-    matchLabels: 
-      app: angular 
-  replicas: 5 # tells deployment to run 2 pods matching the template 
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: angular-deployment
+  namespace: default
+  selfLink: "/apis/extensions/v1beta1/namespaces/default/deployments/angular-deployment"
+  uid: fbddbcfe-8156-11e9-bab7-3a1c9f1866b2
+  resourceVersion: '508725'
+  generation: 1
+  creationTimestamp: '2019-05-28T14:43:40Z'
+  labels:
+    k8s-app: angular-deployment
+  annotations:
+    deployment.kubernetes.io/revision: '1'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: angular-deployment
   template:
-    metadata: 
-      labels: 
-        app: angular 
-    spec: 
-      containers: 
-      - name: angular 
+    metadata:
+      name: angular-deployment
+      creationTimestamp: 
+      labels:
+        k8s-app: angular-deployment
+    spec:
+      containers:
+      - name: angular-deployment
         image: sumithxp/ngxkubeapp:#{Build.BuildId}#
-        ports: 
-        - containerPort: 80 
---- 
-# https://kubernetes.io/docs/concepts/services-networking/service/#defining-a-service  
-kind: Service 
-apiVersion: v1 
-metadata: 
-  name: angular-service 
-spec: 
-  selector: 
-    app: angular 
-  ports: 
-  - protocol: TCP 
-    port: 80 
-    targetPort: 80 
-  type: LoadBalancer 
+        resources: {}
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: File
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: false
+          procMount: Default
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+status:
+  observedGeneration: 1
+  replicas: 1
+  updatedReplicas: 1
+  unavailableReplicas: 1
+  conditions:
+  - type: Available
+    status: 'False'
+    lastUpdateTime: '2019-05-28T14:43:40Z'
+    lastTransitionTime: '2019-05-28T14:43:40Z'
+    reason: MinimumReplicasUnavailable
+    message: Deployment does not have minimum availability.
+  - type: Progressing
+    status: 'True'
+    lastUpdateTime: '2019-05-28T14:43:40Z'
+    lastTransitionTime: '2019-05-28T14:43:40Z'
+    reason: ReplicaSetUpdated
+    message: ReplicaSet "angular-deployment-578dbd68" is progressing.
+    
+    ---
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: angular-deployment
+  namespace: default
+  selfLink: "/api/v1/namespaces/default/services/angular-deployment"
+  uid: fbe6d4a3-8156-11e9-bab7-3a1c9f1866b2
+  resourceVersion: '508876'
+  creationTimestamp: '2019-05-28T14:43:40Z'
+  labels:
+    k8s-app: angular-deployment
+spec:
+  ports:
+  - name: tcp-80-80-2fkqf
+    protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 32044
+  selector:
+    k8s-app: angular-deployment
+  clusterIP: 10.0.201.59
+  type: LoadBalancer
+  sessionAffinity: None
+  externalTrafficPolicy: Cluster
